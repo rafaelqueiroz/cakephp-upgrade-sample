@@ -1,0 +1,49 @@
+version: "3.7"
+services:
+  app:
+    build:
+      args:
+        user: rafael
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    image: cakephp
+    container_name: cakephp-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - cakephp
+
+  db:
+    image: mysql:5.7
+    container_name: cakephp-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: cakephp
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: root
+      MYSQL_USER: cakephp
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+    networks:
+      - cakephp
+
+  nginx:
+    image: nginx:alpine
+    container_name: cakephp-nginx
+    restart: unless-stopped
+    ports:
+      - "8001:80"
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d
+    networks:
+      - cakephp
+
+networks:
+  cakephp:
+    driver: bridge
